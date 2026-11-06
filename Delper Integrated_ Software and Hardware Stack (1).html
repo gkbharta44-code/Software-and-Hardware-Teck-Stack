@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Delper Integrated: Software and Hardware Stack</title>
+<style>
+  :root {
+    --paper: #eef1ec;
+    --card: #f9faf7;
+    --ink: #1b2a2f;
+    --ink-2: #4a5a5f;
+    --rule: #cdd5cf;
+    --budgeted: #2f6f5e;
+    --pending: #a4611c;
+    --regulatory: #6b3d6e;
+    --focus: #1d5fa8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #101816;
+      --card: #162321;
+      --ink: #e4ece8;
+      --ink-2: #9db0a9;
+      --rule: #2a3d39;
+      --budgeted: #6fc4a8;
+      --pending: #e0a060;
+      --regulatory: #c9a0cf;
+      --focus: #8cb8f0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #101816;
+    --card: #162321;
+    --ink: #e4ece8;
+    --ink-2: #9db0a9;
+    --rule: #2a3d39;
+    --budgeted: #6fc4a8;
+    --pending: #e0a060;
+    --regulatory: #c9a0cf;
+    --focus: #8cb8f0;
+  }
+  :root { color-scheme: light dark; box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+  }
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: max(40px, env(safe-area-inset-top, 0px)) 22px 72px;
+  }
+  h1 {
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    line-height: 1.15;
+    font-weight: 600;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    color: var(--ink-2);
+    margin: 0 0 28px;
+    max-width: 60ch;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    margin: 0 0 32px;
+  }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 7px;
+    vertical-align: -1px;
+    background: var(--c);
+  }
+  .layer {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 22px 24px 18px;
+    margin-bottom: 18px;
+  }
+  .layer h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .layer > p {
+    margin: 0 0 14px;
+    color: var(--ink-2);
+    font-size: 0.97rem;
+  }
+  ul.items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  ul.items li {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 12px 0 12px 16px;
+    border-top: 1px solid var(--rule);
+    border-left: 4px solid var(--c);
+    margin: 0;
+  }
+  ul.items li:first-child { border-top: 0; }
+  ul.items strong {
+    font-weight: 600;
+  }
+  .status {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.82rem;
+    color: var(--c);
+    font-weight: 600;
+  }
+  .detail {
+    font-size: 0.97rem;
+    color: var(--ink-2);
+  }
+  .gaps {
+    margin-top: 36px;
+    padding-top: 22px;
+    border-top: 2px solid var(--ink);
+  }
+  .gaps h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  .gaps ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .gaps li { margin-bottom: 8px; }
+  footer {
+    margin-top: 40px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.82rem;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+  @media (max-width: 520px) {
+    main { padding-left: 16px; padding-right: 16px; }
+    .layer { padding: 18px 16px 14px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Delper Integrated: software and hardware stack</h1>
+  <p class="lede">Which systems the business process runs on, what each one does, and how far along it is. Components are drawn from the Executive Summary; nothing here is independently verified.</p>
+
+  <div class="legend" role="list" aria-label="Status key">
+    <span role="listitem" style="--c: var(--budgeted)">Budgeted in the plan</span>
+    <span role="listitem" style="--c: var(--pending)">Partner or agreement not yet signed</span>
+    <span role="listitem" style="--c: var(--regulatory)">Depends on regulatory approval</span>
+  </div>
+
+  <section class="layer" aria-labelledby="commerce">
+    <h2 id="commerce">Commerce and business process</h2>
+    <p>The systems that run the bulk trade track and the retail marketplace.</p>
+    <ul class="items">
+      <li style="--c: var(--budgeted)">
+        <strong>SAP BTP and Signavio</strong>
+        <span class="status">Budgeted: $0.86M</span>
+        <span class="detail">Process mapping middleware for the bulk trade core.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>SAP S/4HANA core ERP</strong>
+        <span class="status">Budgeted: $0.39M</span>
+        <span class="detail">Core accounting and operations for the bulk track.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>Shopify, WooCommerce and ONDC connectors</strong>
+        <span class="status">Budgeted: $0.30M</span>
+        <span class="detail">Buyer-side endpoints for the retail marketplace. ONDC is the proposed channel and has no agreement yet.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>Verification ledger and threat ingestion</strong>
+        <span class="status">Budgeted inside the $1.60M core team line</span>
+        <span class="detail">Custom platform engineering that records verified transactions.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="layer" aria-labelledby="trust">
+    <h2 id="trust">Trust, settlement and token</h2>
+    <p>How money and quality checks move between buyers, sellers and the group.</p>
+    <ul class="items">
+      <li style="--c: var(--pending)">
+        <strong>Escrow with Axis Bank</strong>
+        <span class="status">Partnership in progress</span>
+        <span class="detail">Holds buyer payments. Bulk settles on a 14-day cycle; retail releases after delivery and a satisfaction certificate.</span>
+      </li>
+      <li style="--c: var(--pending)">
+        <strong>Third-party quality control: SGS</strong>
+        <span class="status">No agreement yet</span>
+        <span class="detail">Independent inspection, with webhook links from SGS results into the ERP.</span>
+      </li>
+      <li style="--c: var(--regulatory)">
+        <strong>Delper Token (ERC-20)</strong>
+        <span class="status">Depends on regulatory approval</span>
+        <span class="detail">The fiat-backed token the whole programme runs on, with a 2% tax on mint and burn.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="layer" aria-labelledby="security">
+    <h2 id="security">Industrial security and control</h2>
+    <p>Software that protects factory floor systems, and enforces the rules they run under.</p>
+    <ul class="items">
+      <li style="--c: var(--budgeted)">
+        <strong>Delper Aegis security layer</strong>
+        <span class="status">Targets IEC 62443 Security Level 4</span>
+        <span class="detail">An inline firewall in front of each production line, with a physical write-lock against remote programming.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>Industrial protocol baselining</strong>
+        <span class="status">Part of the 60-day shadow mode</span>
+        <span class="detail">Records Modbus and PROFINET traffic before any live enforcement begins.</span>
+      </li>
+      <li style="--c: var(--regulatory)">
+        <strong>Human override and audit log</strong>
+        <span class="status">Policy required before go-live</span>
+        <span class="detail">Every automated decision that affects customers, workers or safety needs a named owner, thresholds and a log of each use.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="layer" aria-labelledby="hardware">
+    <h2 id="hardware">Hardware</h2>
+    <p>Chips, network gear and the field equipment the software controls.</p>
+    <ul class="items">
+      <li style="--c: var(--budgeted)">
+        <strong>Delper Guard inline units</strong>
+        <span class="status">1,963,334 units at full scale</span>
+        <span class="detail">Deployed across SME and enterprise tiers, with an 82.3% target margin on advanced chips and 68% on SME chips.</span>
+      </li>
+      <li style="--c: var(--pending)">
+        <strong>Fabrication: 28nm, 65nm and 5nm nodes</strong>
+        <span class="status">Wafer agreements not yet signed</span>
+        <span class="detail">Phase 1 uses 28nm and 65nm. Advanced dark-factory chips use 5nm FinFET. Multi-year foundry agreements are a validation gate.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>Private 5G and anti-drone cover</strong>
+        <span class="status">Part of the coastal defence plan</span>
+        <span class="detail">Air-gapped private 5G cores at the factory sites, with anti-drone interceptor domes.</span>
+      </li>
+      <li style="--c: var(--budgeted)">
+        <strong>Village modules</strong>
+        <span class="status">Part of the rural build-out</span>
+        <span class="detail">Solar cold-storage nodes, telehealth rooms, water units and edge inverters for grid connection.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="layer" aria-labelledby="operations">
+    <h2 id="operations">Operations and people</h2>
+    <p>Who runs the systems once they are live.</p>
+    <ul class="items">
+      <li style="--c: var(--budgeted)">
+        <strong>Forward-deployed engineers</strong>
+        <span class="status">Seven per dark-factory hub</span>
+        <span class="detail">Run 24/7 monitoring across three 8-hour shifts. Trained through a 12-month online diploma with UVCE and Bangalore University.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="gaps" aria-labelledby="gaps">
+    <h2 id="gaps">What the summary does not yet specify</h2>
+    <ul>
+      <li>A cloud provider or hosting architecture beyond SAP BTP.</li>
+      <li>The AI model or agent platform behind customs decisions.</li>
+      <li>The database, data warehouse and identity layer.</li>
+      <li>Automation for the pilot, which uses manual bidding and human QC.</li>
+      <li>The engineer headcount: 560,000 FDEs per year does not match seven per hub across 560,000 factories.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Source: Delper Integrated Executive Summary, Retail Aligned. Figures are as stated in the source and have not been independently verified.</p>
+  </footer>
+</main>
+</body>
+</html>
