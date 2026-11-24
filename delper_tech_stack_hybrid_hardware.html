@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delper Integrated: Updated Software and Hybrid Hardware Stack</title>
+<style>
+  :root {
+    --paper: #f4f0e6;
+    --ink: #1c2633;
+    --ink-soft: #4a5566;
+    --rule: #cfc7b4;
+    --panel: #fbf9f3;
+    --signal: #b5431c;
+    --proposed: #2f6f73;
+    --radius: 2px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141a22;
+      --ink: #e7e2d6;
+      --ink-soft: #a7afbc;
+      --rule: #34404f;
+      --panel: #1a222c;
+      --signal: #e0794a;
+      --proposed: #6fb3b8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141a22;
+    --ink: #e7e2d6;
+    --ink-soft: #a7afbc;
+    --rule: #34404f;
+    --panel: #1a222c;
+    --signal: #e0794a;
+    --proposed: #6fb3b8;
+  }
+  :root { box-sizing: border-box; color-scheme: light dark; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  main {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  h1, h2, h3 {
+    font-family: "Newsreader", "Iowan Old Style", Georgia, serif;
+    font-weight: 500;
+    line-height: 1.2;
+    margin: 0;
+  }
+  h1 { font-size: clamp(2rem, 4vw, 2.75rem); letter-spacing: -0.01em; max-width: 22ch; }
+  h2 { font-size: 1.6rem; margin-bottom: 8px; }
+  h3 { font-size: 1.15rem; margin-bottom: 4px; }
+  p { margin: 0 0 12px; max-width: 68ch; }
+  .lede { font-size: 1.05rem; color: var(--ink-soft); margin-top: 16px; }
+  .note { font-size: 0.9rem; color: var(--ink-soft); }
+  section { margin-top: 56px; }
+  section > p.note { margin-top: 4px; }
+
+  /* Status legend: shape encodes status, colour is secondary */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 22px;
+    margin: 24px 0 8px; padding: 14px 16px;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    font-size: 0.9rem; color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+  .mark {
+    display: inline-block; width: 14px; height: 14px; flex: none;
+    border: 2px solid var(--ink); border-radius: var(--radius);
+  }
+  .mark.budgeted { background: var(--ink); }
+  .mark.unsigned { background: transparent; }
+  .mark.regulatory { border-style: dashed; background: transparent; border-color: var(--signal); }
+  .mark.partial { background: linear-gradient(90deg, var(--ink) 50%, transparent 50%); }
+  .mark.proposed { border-color: var(--proposed); border-style: dotted; background: transparent; border-width: 2px; }
+
+  table {
+    width: 100%; border-collapse: collapse; font-size: 0.93rem;
+    background: var(--panel); border: 1px solid var(--rule);
+  }
+  caption {
+    text-align: left; font-family: "Newsreader", Georgia, serif;
+    font-size: 1.15rem; padding: 14px 16px 10px; color: var(--ink);
+  }
+  th, td {
+    text-align: left; vertical-align: top;
+    padding: 10px 14px; border-top: 1px solid var(--rule);
+  }
+  th { font-weight: 600; font-size: 0.85rem; color: var(--ink-soft); border-top: none; }
+  tbody tr:first-child td { border-top: none; }
+  td.status { white-space: nowrap; }
+  td.status .mark { vertical-align: -2px; margin-right: 6px; }
+  .src { font-size: 0.8rem; color: var(--ink-soft); display: block; margin-top: 2px; }
+  .tag-proposed { color: var(--proposed); font-weight: 600; }
+  .tag-source { color: var(--ink); font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; }
+
+  /* Hybrid architecture: a vertical stack of tiers, device at the base, cloud at the top */
+  .stack {
+    position: relative;
+    margin-top: 20px;
+    padding-left: 28px;
+    border-left: 2px solid var(--ink);
+  }
+  .tier {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 18px 20px 18px;
+    margin: 0 0 16px;
+  }
+  .tier::before {
+    content: "";
+    position: absolute; left: -36px; top: 26px;
+    width: 14px; height: 2px; background: var(--ink);
+  }
+  .tier::after {
+    content: "";
+    position: absolute; left: -41px; top: 21px;
+    width: 12px; height: 12px; background: var(--ink); border-radius: 50%;
+  }
+  .tier header { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .tier .role { color: var(--ink-soft); font-size: 0.93rem; margin: 0 0 10px; }
+  .spec-grid {
+    display: grid; grid-template-columns: 180px 1fr; gap: 6px 16px;
+    font-size: 0.92rem; margin: 0;
+  }
+  .spec-grid dt { color: var(--ink-soft); }
+  .spec-grid dd { margin: 0; }
+  .tier .status-line { font-size: 0.88rem; color: var(--ink-soft); margin-top: 10px; }
+
+  .units {
+    font-family: "Newsreader", Georgia, serif; font-size: 1.4rem; color: var(--ink);
+  }
+
+  .assumptions {
+    border-left: 3px solid var(--signal);
+    padding: 12px 18px; background: var(--panel); margin: 16px 0 0;
+  }
+  .assumptions p { margin-bottom: 6px; }
+  .assumptions ul { margin: 6px 0 0; padding-left: 18px; }
+  .assumptions li { margin-bottom: 4px; font-size: 0.93rem; }
+
+  ul.plain { padding-left: 18px; margin: 8px 0 0; }
+  ul.plain li { margin-bottom: 8px; max-width: 70ch; }
+
+  footer {
+    margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--rule);
+    font-size: 0.85rem; color: var(--ink-soft);
+  }
+
+  a { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--proposed); outline-offset: 3px; }
+
+  @media (max-width: 640px) {
+    .spec-grid { grid-template-columns: 1fr; gap: 2px; }
+    .spec-grid dt { margin-top: 8px; }
+    .stack { padding-left: 22px; }
+    .tier::before { left: -30px; }
+    .tier::after { left: -35px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Delper Integrated: software and hybrid hardware stack</h1>
+  <p class="lede">Which systems the business runs on, where each one sits, and how far along it is. Components marked as from the source come from the Delper Integrated Executive Summary and are not independently verified. Components marked as proposed are my recommendations and do not appear in the summary.</p>
+</header>
+
+<div class="legend" role="list" aria-label="Status key">
+  <span role="listitem"><i class="mark budgeted" aria-hidden="true"></i>Budgeted in the plan</span>
+  <span role="listitem"><i class="mark unsigned" aria-hidden="true"></i>Agreement not yet signed</span>
+  <span role="listitem"><i class="mark regulatory" aria-hidden="true"></i>Depends on regulatory approval</span>
+  <span role="listitem"><i class="mark partial" aria-hidden="true"></i>Partnership in progress</span>
+  <span role="listitem"><i class="mark proposed" aria-hidden="true"></i>Proposed, not in source</span>
+</div>
+
+<section id="software" aria-labelledby="software-title">
+  <h2 id="software-title">Software stack</h2>
+  <p class="note">Grouped by the job each layer does in the business process. Budget figures are from the summary.</p>
+
+  <div class="table-wrap">
+  <table>
+    <caption>Business process layers</caption>
+    <thead>
+      <tr>
+        <th scope="col">Component</th>
+        <th scope="col">What it does for Delper</th>
+        <th scope="col">Status</th>
+        <th scope="col">Budget or note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="rowgroup" colspan="4" style="font-family: 'Newsreader', Georgia, serif; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--paper);">Commerce and bulk trade</th>
+      </tr>
+      <tr>
+        <td>SAP BTP and Signavio<span class="src tag-source">From source</span></td>
+        <td>Process mapping middleware for the bulk trade core.</td>
+        <td class="status"><i class="mark budgeted"></i>Budgeted</td>
+        <td>$0.86M</td>
+      </tr>
+      <tr>
+        <td>SAP S/4HANA, two-tier model<span class="src tag-source">From source (core ERP); tiering proposed</span></td>
+        <td>Group ledger and bulk-track accounting. Private cloud for core operations, public cloud for new units.</td>
+        <td class="status"><i class="mark budgeted"></i>Budgeted</td>
+        <td>$0.39M</td>
+      </tr>
+      <tr>
+        <td>Shopify, WooCommerce and ONDC connectors<span class="src tag-source">From source</span></td>
+        <td>Buyer-side endpoints for the retail marketplace. Usable for the pilot; not a backbone for billions of customers.</td>
+        <td class="status"><i class="mark budgeted"></i>Budgeted; ONDC unsigned</td>
+        <td>$0.30M</td>
+      </tr>
+      <tr>
+        <td>Consolidation: SAP Group Reporting or OneStream<span class="src tag-proposed">Proposed</span></td>
+        <td>Combines Track 1, Track 2, Aegis and Make in India entities.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>Treasury: SAP Treasury or Kyriba<span class="src tag-proposed">Proposed</span></td>
+        <td>Iron Nexus and Make in India bond schedules, repayments, and approval-gated cash allocation.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>Salesforce Sales and Service Cloud<span class="src tag-proposed">Proposed</span></td>
+        <td>B2B buyer relationships and support. Receives summaries, not every retail transaction.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+
+      <tr>
+        <th scope="rowgroup" colspan="4" style="font-family: 'Newsreader', Georgia, serif; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--paper);">Ledger, data and platform</th>
+      </tr>
+      <tr>
+        <td>Verification ledger and threat ingestion<span class="src tag-source">From source</span></td>
+        <td>Records verified transactions. Proposed build: an append-only log on the event backbone.</td>
+        <td class="status"><i class="mark budgeted"></i>Budgeted (inside core team)</td>
+        <td>$1.60M core team line</td>
+      </tr>
+      <tr>
+        <td>Event backbone: Kafka or Confluent<span class="src tag-proposed">Proposed</span></td>
+        <td>Routes events between the bulk, retail, TV and factory streams.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>Lakehouse: Snowflake or Databricks<span class="src tag-proposed">Proposed</span></td>
+        <td>Per-customer revenue, the 28-year ledger, forecasting.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>Cloud hosting in Indian regions<span class="src tag-proposed">Proposed; source does not specify</span></td>
+        <td>Data residency under the DPDP Act. Multi-zone, with cross-region recovery.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>Identity: Microsoft Entra ID or Okta<span class="src tag-proposed">Proposed</span></td>
+        <td>Access control across all layers.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+
+      <tr>
+        <th scope="rowgroup" colspan="4" style="font-family: 'Newsreader', Georgia, serif; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--paper);">Trust, settlement and token</th>
+      </tr>
+      <tr>
+        <td>Escrow with Axis Bank<span class="src tag-source">From source</span></td>
+        <td>Holds buyer payments. Bulk settles on a 14-day cycle; retail releases after delivery and a satisfaction certificate.</td>
+        <td class="status"><i class="mark partial"></i>Partnership in progress</td>
+        <td>Not stated</td>
+      </tr>
+      <tr>
+        <td>Quality control: SGS<span class="src tag-source">From source</span></td>
+        <td>Independent inspection, with webhook links from SGS results into the ERP.</td>
+        <td class="status"><i class="mark unsigned"></i>No agreement yet</td>
+        <td>Not stated</td>
+      </tr>
+      <tr>
+        <td>Delper Token (ERC-20)<span class="src tag-source">From source</span></td>
+        <td>Fiat-backed token the programme runs on, with a 2% tax on mint and burn. Legal classification to be settled with counsel before design work.</td>
+        <td class="status"><i class="mark regulatory"></i>Depends on regulatory approval</td>
+        <td>Not stated</td>
+      </tr>
+
+      <tr>
+        <th scope="rowgroup" colspan="4" style="font-family: 'Newsreader', Georgia, serif; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--paper);">Industrial security and control</th>
+      </tr>
+      <tr>
+        <td>Delper Aegis security layer<span class="src tag-source">From source</span></td>
+        <td>Inline firewall in front of each production line, with a physical write-lock against remote programming. Targets IEC 62443 Security Level 4.</td>
+        <td class="status"><i class="mark unsigned"></i>Targeted</td>
+        <td>Not stated</td>
+      </tr>
+      <tr>
+        <td>Industrial protocol baselining<span class="src tag-source">From source</span></td>
+        <td>Records Modbus and PROFINET traffic during a 60-day shadow mode before live enforcement.</td>
+        <td class="status"><i class="mark unsigned"></i>Part of shadow mode</td>
+        <td>Not stated</td>
+      </tr>
+      <tr>
+        <td>Human override and audit log<span class="src tag-source">From source</span></td>
+        <td>Every automated decision affecting customers, workers or safety has a named owner, thresholds and a log entry.</td>
+        <td class="status"><i class="mark unsigned"></i>Policy required before go-live</td>
+        <td>Not stated</td>
+      </tr>
+      <tr>
+        <td>Master kill switch (hardware-backed)<span class="src tag-proposed">Proposed design; concept from source</span></td>
+        <td>Cuts power or blocks signing keys without depending on software or AI. Lives in the orchestration and treasury layers.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+
+      <tr>
+        <th scope="rowgroup" colspan="4" style="font-family: 'Newsreader', Georgia, serif; font-size: 1.05rem; font-weight: 500; color: var(--ink); background: var(--paper);">AI and governance</th>
+      </tr>
+      <tr>
+        <td>Managed LLM with policy and audit layer<span class="src tag-proposed">Proposed; source does not specify</span></td>
+        <td>Agentic control plane. Proposes actions; approval gates decide what moves money or equipment.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+      <tr>
+        <td>ESG and SDG reporting: SAP Sustainability Control Tower or Workiva<span class="src tag-proposed">Proposed</span></td>
+        <td>Mapping to the 17 SDGs and E, S, G pillars.</td>
+        <td class="status"><i class="mark proposed"></i>Proposed</td>
+        <td>Not budgeted</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p class="note" style="margin-top:14px;">Budgeted lines total $1.55M in software, excluding the $1.60M core team line. Proposed components have no budget line in the summary.</p>
+</section>
+
+<section id="hardware" aria-labelledby="hardware-title">
+  <h2 id="hardware-title">Hybrid hardware stack</h2>
+  <p class="note">Four tiers from the device in the home up to the cloud. Work stays as close to the customer as the job allows, and authoritative records stay central. Specifications for home, factory edge, data centre and cloud are planning estimates, not vendor figures.</p>
+
+  <div class="assumptions" role="note">
+    <p><strong>Sizing assumptions used in the cloud figures</strong></p>
+    <ul>
+      <li>6.0 billion customers from Year 5 (from the summary).</li>
+      <li>10 events per customer per day, combined across retail, bulk and TV. A placeholder to validate first.</li>
+      <li>About 200 bytes per event; peak at three times the daily average.</li>
+      <li>Result: about 694,000 events per second on average, about 2.1 million at peak, about 4.4 PB of raw event data per year.</li>
+    </ul>
+  </div>
+
+  <div class="stack">
+
+    <article class="tier" aria-labelledby="tier-cloud">
+      <header>
+        <h3 id="tier-cloud">Cloud platform</h3>
+        <span class="note"><i class="mark proposed"></i> Proposed</span>
+      </header>
+      <p class="role">Transaction backbone, lakehouse, identity and managed AI. Holds the authoritative cross-stream records.</p>
+      <dl class="spec-grid">
+        <dt>Event backbone</dt><dd>Kafka or Confluent, roughly 10 to 30 brokers at typical throughput, to be benchmarked. Partitioned by region.</dd>
+        <dt>Lakehouse</dt><dd>Object storage on the order of petabytes per year at the assumed volume, with tiering to cold storage.</dd>
+        <dt>Compute</dt><dd>Kubernetes cluster sized for peak, with autoscaling.</dd>
+        <dt>AI</dt><dd>Managed LLM endpoints for the control plane. GPU capacity sized from actual workload, not estimated here.</dd>
+        <dt>Regions</dt><dd>Indian cloud regions for DPDP Act data residency. Multi-zone, with cross-region disaster recovery.</dd>
+        <dt>Security</dt><dd>Encryption at rest and in transit, HSM-backed keys, ISO 27001 controls, audit logging.</dd>
+      </dl>
+      <p class="status-line">Dependencies: cloud provider not named in the summary beyond SAP BTP.</p>
+    </article>
+
+    <article class="tier" aria-labelledby="tier-dc">
+      <header>
+        <h3 id="tier-dc">Group data centre or private cloud</h3>
+        <span class="note"><i class="mark proposed"></i> Proposed</span>
+      </header>
+      <p class="role">Runs S/4HANA and treasury in a controlled environment, separate from the retail platform.</p>
+      <dl class="spec-grid">
+        <dt>ERP</dt><dd>SAP HANA appliance or certified cloud VMs, sized with Quick Sizer from throughput and concurrent users.</dd>
+        <dt>Memory</dt><dd>Typically hundreds of GB to several TB for HANA, depending on data volume.</dd>
+        <dt>Storage</dt><dd>Enterprise SAN or NVMe, replicated.</dd>
+        <dt>Availability</dt><dd>Two sites in India with disaster recovery.</dd>
+        <dt>Treasury</dt><dd>Separate, access-controlled environment with approval-gate logic.</dd>
+      </dl>
+    </article>
+
+    <article class="tier" aria-labelledby="tier-factory">
+      <header>
+        <h3 id="tier-factory">Factory edge (Make in India)</h3>
+        <span class="note"><i class="mark budgeted"></i> Units from source; server specs proposed</span>
+      </header>
+      <p class="role">Runs the production lines locally, so control keeps working through a cloud outage. Each line sits behind an Aegis firewall.</p>
+      <dl class="spec-grid">
+        <dt>Delper Guard inline units</dt><dd><span class="units">1,963,334</span> units at full scale, across SME and enterprise tiers. Target margin 82.3% on advanced chips and 68% on SME chips. <span class="src tag-source">From source</span></dd>
+        <dt>Aegis security layer</dt><dd>Inline firewall per production line, physical write-lock against remote programming, IEC 62443 SL4 target. <span class="src tag-source">From source</span></dd>
+        <dt>Compute</dt><dd>Industrial server or edge node, 16 to 64 cores (x86 or ARM). <span class="src tag-proposed">Proposed</span></dd>
+        <dt>Memory and storage</dt><dd>64 to 256 GB RAM; NVMe 2 to 8 TB with local buffering. <span class="src tag-proposed">Proposed</span></dd>
+        <dt>Control</dt><dd>PLC and SCADA integration, TSN or industrial Ethernet, deterministic control loops. <span class="src tag-proposed">Proposed</span></dd>
+        <dt>Resilience</dt><dd>Redundant power and network. Rated for industrial temperature and dust. <span class="src tag-proposed">Proposed</span></dd>
+        <dt>Private 5G and anti-drone cover</dt><dd>Air-gapped private 5G cores at factory sites, with interceptor domes. Part of the coastal defence plan. <span class="src tag-source">From source; scope not specified</span></dd>
+      </dl>
+      <p class="status-line"><i class="mark unsigned"></i> Protocol baselining and human override must be in place before live enforcement.</p>
+    </article>
+
+    <article class="tier" aria-labelledby="tier-chips">
+      <header>
+        <h3 id="tier-chips">Chip fabrication</h3>
+        <span class="note"><i class="mark unsigned"></i> Wafer agreements not yet signed</span>
+      </header>
+      <p class="role">Silicon for the Delper Guard units. Phase 1 uses mature nodes; advanced dark-factory chips use 5nm.</p>
+      <dl class="spec-grid">
+        <dt>Phase 1 nodes</dt><dd>28nm and 65nm. <span class="src tag-source">From source</span></dd>
+        <dt>Advanced nodes</dt><dd>5nm FinFET for dark-factory chips. <span class="src tag-source">From source</span></dd>
+        <dt>Gate</dt><dd>Multi-year foundry agreements are a validation gate, not yet signed.</dd>
+      </dl>
+    </article>
+
+    <article class="tier" aria-labelledby="tier-home">
+      <header>
+        <h3 id="tier-home">Home device (drawing room)</h3>
+        <span class="note"><i class="mark proposed"></i> Proposed; source does not include home devices</span>
+      </header>
+      <p class="role">Handles work that should happen near the customer: local signing, Live TV decoding, offline operation and privacy-sensitive inference. Syncs with the central backbone when connected.</p>
+      <dl class="spec-grid">
+        <dt>Processor</dt><dd>ARM SoC, 4 to 8 cores, optional NPU at 10 to 40 TOPS for local inference.</dd>
+        <dt>Memory and storage</dt><dd>4 to 8 GB RAM; 64 to 256 GB encrypted flash.</dd>
+        <dt>Security</dt><dd>Secure element or TPM 2.0, hardware-backed keys, secure boot, signed firmware, remote revocation.</dd>
+        <dt>Video</dt><dd>HDMI 2.1, hardware 4K decode, adaptive bitrate for Live TV.</dd>
+        <dt>Network</dt><dd>Wi-Fi 6E or 7, gigabit Ethernet, optional cellular fallback.</dd>
+        <dt>Power</dt><dd>10 to 25 W.</dd>
+        <dt>Management</dt><dd>Over-the-air updates, remote health checks and revocation.</dd>
+      </dl>
+    </article>
+
+    <article class="tier" aria-labelledby="tier-village">
+      <header>
+        <h3 id="tier-village">Village modules</h3>
+        <span class="note"><i class="mark unsigned"></i> Part of rural build-out; scope not specified</span>
+      </header>
+      <p class="role">Solar cold-storage nodes, telehealth rooms, water units and edge inverters for grid connection. <span class="src tag-source">From source</span></p>
+    </article>
+
+  </div>
+
+  <p class="note" style="margin-top:8px;">Where the home device and village modules sit, the summary gives the components but not how many units, where they are placed, or how they are managed.</p>
+</section>
+
+<section id="gaps" aria-labelledby="gaps-title">
+  <h2 id="gaps-title">Open items before this stack is final</h2>
+  <ul class="plain">
+    <li>Events per customer per day, by stream. This drives the cloud and backbone sizing more than any other input.</li>
+    <li>Written sizing from SAP for S/4HANA and treasury, plus a transaction throughput model for retail, bulk and Live TV at peak.</li>
+    <li>Costs for the lines not in the budget: lakehouse, event backbone, cloud hosting, AI platform, identity, consolidation and treasury software.</li>
+    <li>Agreements not yet signed: ONDC, SGS, foundry contracts, and the Axis Bank escrow partnership. The plan should show what happens if any one falls through.</li>
+    <li>Regulatory approval for the Delper Token. Its structure affects settlement, the ledger design, and the tax treatment, so counsel should review it before design work.</li>
+    <li>Factory-edge hardware specifications, from the equipment vendors.</li>
+    <li>The forward-deployed engineer headcount. The summary's figures do not reconcile: seven per hub does not match 560,000 per year across 560,000 factories.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Source for components marked as from source: Delper Integrated Executive Summary, Retail Aligned. Figures are as stated in the source and have not been independently verified. Components marked as proposed are recommendations and do not appear in the summary. Hardware and cloud specifications are planning estimates, pending vendor sizing.</p>
+</footer>
+
+</main>
+</body>
+</html>
